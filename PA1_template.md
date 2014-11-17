@@ -250,7 +250,11 @@ There should be more elegant solutions, but for now this has to suffice.
 # Create a factor variable to be able to differentiate between weekdays and weekends 
 
 df_complete$we <- as.factor(sapply(df_complete$date, 
-                                   function(x){if(!(weekdays(x) %in% c('Saturday','Sunday'))){return("weekday")}else{return("weekend")}}))
+                                   function(x){
+                                       if(!(weekdays(x) %in% c('Saturday','Sunday'))){
+                                           return("weekday")}
+                                       else{
+                                           return("weekend")}}))
 
 df_weekdays_complete <- make_df_daily(df_complete[df_complete$we=="weekday",])
 df_weekends_complete <- make_df_daily(df_complete[df_complete$we=="weekend",])
@@ -263,11 +267,11 @@ df_daily_complete$we <- as.factor(df_daily_complete$we)
 
 
 ggplot(df_daily_complete, 
-        aes(x=interval, y=steps)) + 
-        geom_line(color="steelblue", size=1) + 
-        facet_wrap(~ we, nrow=2, ncol=1) +
-        labs(x="Interval", y="Number of steps") +
-        theme_bw()
+       aes(x=interval, y=steps)) + 
+    geom_line(color="steelblue", size=1) + 
+    facet_wrap(~ we, nrow=2, ncol=1) +
+    labs(x="Interval", y="Number of steps") +
+    theme_bw()
 ```
 
 ![plot of chunk weekday_compare](figure/weekday_compare-1.png) 
