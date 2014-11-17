@@ -20,14 +20,20 @@ I will wrap most of the scripting into functions to make the code more modular a
 2. It will be unzipped and read in as a data.frame
 3. Column types are adjusted (Date column -> date, Interval column -> factor)
 
-```{r requirements, echo=TRUE}
+
+```r
 ## Requirements
 library(ggplot2) # For creating nice plots
 Sys.setlocale("LC_TIME", "English")
 ```
 
+```
+## [1] "English_United States.1252"
+```
 
-```{r data_loading, echo=TRUE}
+
+
+```r
 ## Data acquisition and loading
 
 read_activity_data <- function(){
@@ -60,8 +66,17 @@ df_act <- read_activity_data()
 
 ## ... and make sure the data is loaded
 summary(df_act)
+```
 
-
+```
+##      steps             date               interval    
+##  Min.   :  0.00   Min.   :2012-10-01   0      :   61  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   5      :   61  
+##  Median :  0.00   Median :2012-10-31   10     :   61  
+##  Mean   : 37.38   Mean   :2012-10-31   15     :   61  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   20     :   61  
+##  Max.   :806.00   Max.   :2012-11-30   25     :   61  
+##  NA's   :2304                          (Other):17202
 ```
 
 The data is now ready for analysis.
@@ -71,7 +86,8 @@ The data is now ready for analysis.
 
 The following code creates a new data.frame that contains the total number of steps for each day.
 
-```{r aggregation, echo=TRUE}
+
+```r
 make_df_total <- function(df_in=df_act){
     df_total <- aggregate(steps ~ date, df_in, sum)
     colnames(df_total) <- c("date", "steps")
@@ -84,21 +100,22 @@ df_total <- make_df_total()
 
 We can now calculate a central tendency for the total number of steps over time, getting the mean or the median:
 
-```{r central_tendency, echo=TRUE}
+
+```r
 n_mean <- round(mean(df_total$steps), 2)
 n_median <- round(median(df_total$steps), 2)
 ```
 
 This results in:<br>
-1. Mean: `r as.character(n_mean)`<br>
-2. Median: `r as.character(n_median)`
+1. Mean: 10766.19<br>
+2. Median: 10765
 
 
 The following code creates a histogram of the daily total number of steps taken.
 
 
-```{r steps_per_day, echo=TRUE}
 
+```r
 plot_hist <- function(df_in, bin=3000, title="Histogram of Steps Taken per Day") {
     
     ggplot(df_in, aes(x=steps)) + 
@@ -111,13 +128,16 @@ plot_hist <- function(df_in, bin=3000, title="Histogram of Steps Taken per Day")
 plot_hist(df_total)
 ```
 
+![plot of chunk steps_per_day](figure/steps_per_day-1.png) 
+
 
 ## What is the average daily activity pattern?
 
 The following code creates a plot depicting the average daily pattern of the number of steps (plotted against the measurement interval).
 
 
-```{r steps_per_interval, echo=TRUE}
+
+```r
 make_df_daily <- function(df_in) {
     df_out<- aggregate(df_in$steps, by=list(interval=df_in$interval),
                        FUN=mean, na.rm=T)
@@ -144,13 +164,16 @@ max_interv <- df_daily[which.max(df_daily$steps),]$interval
 plot_daily_pattern(df_daily)
 ```
 
-The **`r max_interv`<sup>th</sup> interval** has the maximum activity on the average.
+![plot of chunk steps_per_interval](figure/steps_per_interval-1.png) 
+
+The **835<sup>th</sup> interval** has the maximum activity on the average.
 
 
 ## Imputing missing values
-The data set contains `r length(which(is.na(df_act$steps)))` missing values for the step variable. Since activity usually varies over the course of a day, it makes sense to replace the NAs with the average amount of steps from the same interval from all other days.
+The data set contains 2304 missing values for the step variable. Since activity usually varies over the course of a day, it makes sense to replace the NAs with the average amount of steps from the same interval from all other days.
 
-```{r impute_data, echo=TRUE}
+
+```r
 na_replacements <- function(df_in, df_defaults=df_daily) {
     v_ids <- which(is.na(df_in$steps))
     v_replacements <- unlist(lapply(v_ids, FUN=function(id){
@@ -168,25 +191,42 @@ df_complete <-data.frame(
 
 df_complete_total <- make_df_total(df_complete)
 ```
-We now have a data.frame with `r length(which(is.na(df_complete$steps)))` missing values for the step variable. Let's call our histogram plotting function again:
+We now have a data.frame with 0 missing values for the step variable. Let's call our histogram plotting function again:
 
-```{r steps_per_day_complete, echo=TRUE}
+
+```r
 print (summary(df_complete_total))
+```
+
+```
+##       date                steps      
+##  Min.   :2012-10-01   Min.   :   41  
+##  1st Qu.:2012-10-16   1st Qu.: 9819  
+##  Median :2012-10-31   Median :10766  
+##  Mean   :2012-10-31   Mean   :10766  
+##  3rd Qu.:2012-11-15   3rd Qu.:12811  
+##  Max.   :2012-11-30   Max.   :21194
+```
+
+```r
 plot_hist(df_complete_total)
 ```
+
+![plot of chunk steps_per_day_complete](figure/steps_per_day_complete-1.png) 
 
 Replacing the NAs with means from other days leads to higher counts in certain bins, especially those close to the center of the graph.
 
 We can also repeat calculations for the central tendency:
 
-```{r central_tendency_complete, echo=TRUE}
+
+```r
 n_mean <- round(mean(df_complete_total$steps), 2)
 n_median <- round(median(df_complete_total$steps), 2)
 ```
 
 This time we get:<br>
-1. Mean: `r as.character(n_mean)`<br>
-2. Median: `r as.character(n_median)`
+1. Mean: 10766.19<br>
+2. Median: 10766.19
 
 Now the Median is identical to the mean, because all fields formerly containing NA now contain the mean. This is a disadventage of calculating values for NAs.
 
@@ -205,9 +245,8 @@ Sadly, my aggregation function above is not that elegant and I am close to the d
 There should be more elegant solutions, but for now this has to suffice.
 
 
-```{r weekday_compare, echo=TRUE}
 
-
+```r
 # Create a factor variable to be able to differentiate between weekdays and weekends 
 
 df_complete$we <- as.factor(sapply(df_complete$date, 
@@ -229,8 +268,9 @@ ggplot(df_daily_complete,
         facet_wrap(~ we, nrow=2, ncol=1) +
         labs(x="Interval", y="Number of steps") +
         theme_bw()
-
 ```
+
+![plot of chunk weekday_compare](figure/weekday_compare-1.png) 
 
 On weekends, the test subject took more steps during the noon and afternoon than on weekdays. On weekdays he presumably has to work, thus reducing his body activity.
 
